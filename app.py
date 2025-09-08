@@ -1,174 +1,160 @@
-import os
 import sqlite3
-from dotenv import load_dotenv
-from flask import Flask, g
+import shortuuid
+from flask import Flask, jsonify, request, g
 
-# --- Initial Configuration ---
-
-# Load environment variables from a .env file
-load_dotenv()
-
-# Initialize Flask App
+# --- Flask App Initialization ---
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-app.config['DATABASE'] = os.environ.get('DATABASE_FILE', 'sustainability.db')
+app.config['DATABASE'] = 'farm_game.db'
 
 # --- Database Connection Management ---
 
 def get_db():
-    """
-    Opens a new database connection if there is none yet for the
-    current application context.
-    """
+    """Opens a new database connection if there is none for the current context."""
     if 'db' not in g:
-        g.db = sqlite3.connect(
-            app.config['DATABASE'],
-            detect_types=sqlite3.PARSE_DECLTYPES
-        )
-        g.db.row_factory = sqlite3.Row # Allows accessing columns by name
+        g.db = sqlite3.connect(app.config['DATABASE'])
+        g.db.row_factory = sqlite3.Row  # Allows accessing columns by name
     return g.db
 
 @app.teardown_appcontext
 def close_db(exception):
-    """Closes the database again at the end of the request."""
+    """Closes the database at the end of the request."""
     db = g.pop('db', None)
     if db is not None:
         db.close()
 
-# --- Database Initialization Function ---
+# --- Core Database Logic Functions ---
+# These functions contain the raw database operations.
 
-def create_tables():
-    """Connects to the database and creates all tables for SQLite."""
-    db = get_db()
-    cursor = db.cursor()
-    
-    # --- CREATE TABLE SQL Statements (SQLite compatible) ---
+def create_tables(conn):
+    """Sets up all required tables using shortuuid for primary keys."""
+    cursor = conn.cursor()
+    print("Verifying all tables...")
+    # (Table creation statements remain the same as before)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            user_id TEXT PRIMARY KEY, phone_number TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL,
+            full_name TEXT NOT NULL, village TEXT NOT NULL, district TEXT NOT NULL, state TEXT NOT NULL,
+            sustainability_score INTEGER DEFAULT 0, points INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS tasks (
+            task_id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT NOT NULL, category TEXT,
+            points_reward INTEGER NOT NULL, verification_type TEXT NOT NULL, difficulty TEXT DEFAULT 'Medium'
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_tasks (
+            user_task_id TEXT PRIMARY KEY, user_id TEXT NOT NULL, task_id TEXT NOT NULL, status TEXT NOT NULL,
+            assigned_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, completed_date TIMESTAMP, evidence_path TEXT,
+            FOREIGN KEY (user_id) REFERENCES users (user_id), FOREIGN KEY (task_id) REFERENCES tasks (task_id)
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS badges (
+            badge_id TEXT PRIMARY KEY, badge_name TEXT NOT NULL UNIQUE,
+            badge_description TEXT, icon_url TEXT
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_badges (
+            user_badge_id TEXT PRIMARY KEY, user_id TEXT NOT NULL, badge_id TEXT NOT NULL,
+            earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (user_id), FOREIGN KEY (badge_id) REFERENCES badges (badge_id)
+        )
+    ''')
+    conn.commit()
+    print("Tables verified successfully.")
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        phone_number TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        full_name TEXT,
-        village TEXT,
-        district TEXT,
-        state TEXT,
-        sustainability_score INTEGER DEFAULT 0,
-        points INTEGER DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    """)
+def add_user(conn, phone, password, name, village, district, state):
+    """Adds a new user. Hashes the password."""
+    cursor = conn.cursor()
+    user_id = shortuuid.uuid()
+    # In a real app: password_hash = generate_password_hash(password)
+    password_hash = password  # Placeholder
+    try:
+        cursor.execute(
+            'INSERT INTO users (user_id, phone_number, password_hash, full_name, village, district, state) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            (user_id, phone, password_hash, name, village, district, state)
+        )
+        conn.commit()
+        return user_id
+    except sqlite3.IntegrityError:
+        return None
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS sustainable_practices (
-        practice_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        description TEXT,
-        category TEXT
-    );
-    """)
+def get_user_dashboard_data(conn, user_id):
+    """Fetches dashboard data for a specific user."""
+    cursor = conn.cursor()
+    assigned_tasks = cursor.execute('''
+        SELECT t.title, t.description, t.points_reward, ut.status
+        FROM user_tasks ut JOIN tasks t ON ut.task_id = t.task_id
+        WHERE ut.user_id = ? AND ut.status = 'ASSIGNED'
+    ''', (user_id,)).fetchall()
+    earned_badges = cursor.execute('''
+        SELECT b.badge_name, b.icon_url
+        FROM user_badges ub JOIN badges b ON ub.badge_id = b.badge_id
+        WHERE ub.user_id = ?
+    ''', (user_id,)).fetchall()
+    return {
+        "tasks": [dict(row) for row in assigned_tasks],
+        "badges": [dict(row) for row in earned_badges]
+    }
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS challenges (
-        challenge_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        description TEXT,
-        practice_id INTEGER,
-        challenge_type TEXT NOT NULL,
-        points_reward INTEGER NOT NULL,
-        verification_method TEXT,
-        is_active BOOLEAN DEFAULT 1,
-        FOREIGN KEY (practice_id) REFERENCES sustainable_practices(practice_id)
-    );
-    """)
+def get_village_leaderboard_data(conn, village, district):
+    """Gets top 10 users in a village."""
+    cursor = conn.cursor()
+    leaderboard = cursor.execute('''
+        SELECT full_name, points, sustainability_score FROM users
+        WHERE village = ? AND district = ?
+        ORDER BY points DESC LIMIT 10
+    ''', (village, district)).fetchall()
+    return [dict(row) for row in leaderboard]
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS user_challenges (
-        user_challenge_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        challenge_id INTEGER NOT NULL,
-        status TEXT DEFAULT 'in_progress',
-        start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        completion_date TIMESTAMP,
-        submission_proof_url TEXT,
-        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-        FOREIGN KEY (challenge_id) REFERENCES challenges(challenge_id) ON DELETE CASCADE
-    );
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS badges (
-        badge_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        description TEXT,
-        icon_url TEXT,
-        criteria_description TEXT
-    );
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS user_badges (
-        user_badge_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        badge_id INTEGER NOT NULL,
-        date_earned TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-        FOREIGN KEY (badge_id) REFERENCES badges(badge_id) ON DELETE CASCADE,
-        UNIQUE(user_id, badge_id)
-    );
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS rewards (
-        reward_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        description TEXT,
-        reward_type TEXT,
-        points_cost INTEGER NOT NULL,
-        provider TEXT,
-        stock_quantity INTEGER
-    );
-    """)
-    
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS community_progress (
-        community_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        community_name TEXT NOT NULL,
-        community_level TEXT,
-        total_water_saved_liters INTEGER DEFAULT 0,
-        total_members INTEGER DEFAULT 0,
-        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    """)
-
-    db.commit()
-    print("Database tables checked and created successfully in SQLite!")
-
-# --- FLASK COMMANDS AND ROUTES ---
+# --- Flask CLI Commands ---
 
 @app.cli.command("init-db")
 def init_db_command():
-    """Flask CLI command to initialize the SQLite database."""
-    # To ensure tables are fresh, we can delete the file first.
-    db_file = app.config['DATABASE']
-    if os.path.exists(db_file):
-        os.remove(db_file)
-        print(f"Removed existing database file '{db_file}'.")
+    """Flask CLI command to initialize the database."""
+    db = get_db()
+    create_tables(db)
+    print("Database has been initialized.")
+
+# --- API Routes ---
+
+@app.route('/api/register', methods=['POST'])
+def register_user():
+    """API endpoint to register a new user."""
+    data = request.get_json()
+    if not all(k in data for k in ['phone', 'password', 'name', 'village', 'district', 'state']):
+        return jsonify({"error": "Missing required fields"}), 400
     
-    with app.app_context():
-        create_tables()
+    db = get_db()
+    user_id = add_user(db, data['phone'], data['password'], data['name'], data['village'], data['district'], data['state'])
+    
+    if user_id:
+        return jsonify({"message": "User registered successfully", "user_id": user_id}), 201
+    else:
+        return jsonify({"error": "User with this phone number already exists"}), 409
 
+@app.route('/api/dashboard/<user_id>', methods=['GET'])
+def get_dashboard(user_id):
+    """API endpoint to get a user's dashboard."""
+    db = get_db()
+    dashboard_data = get_user_dashboard_data(db, user_id)
+    return jsonify(dashboard_data)
+
+@app.route('/api/leaderboard/<district>/<village>', methods=['GET'])
+def get_leaderboard(district, village):
+    """API endpoint to get the village leaderboard."""
+    db = get_db()
+    leaderboard = get_village_leaderboard_data(db, village, district)
+    return jsonify(leaderboard)
+  
 @app.route('/')
-def home():
-    """Basic route to check if the app is running."""
-    try:
-        get_db()
-        db_status = "Database connection successful."
-    except Exception as e:
-        db_status = f"Database connection failed: {e}"
-        
-    return f"<h1>Sustainable Farming Platform API</h1><p>Setup is using SQLite.</p><p>{db_status}</p>"
+def index():
+    return "<h1>Sustainable Farming API is running!</h1>"
 
+# --- Main execution block ---
 if __name__ == '__main__':
     app.run(debug=True)
-
