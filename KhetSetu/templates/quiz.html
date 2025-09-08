@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="bg-white p-8 rounded-2xl shadow-lg max-w-2xl mx-auto">
+  <h2 class="text-2xl font-bold mb-6">Eco Quiz 🌍</h2>
+
+  <!-- Quiz Timer -->
+  <div id="quiz-timer" class="text-red-600 text-lg font-semibold mb-4">
+    ⏳ 01:00
+  </div>
+
+  <form method="POST" action="{{ url_for('quiz') }}">
+    <p class="mb-4 font-medium">1. Which farming method is most sustainable?</p>
+    <label class="block mb-2">
+      <input type="radio" name="q1" value="organic"> Organic Farming
+    </label>
+    <label class="block mb-2">
+      <input type="radio" name="q1" value="chemical"> Chemical Intensive Farming
+    </label>
+    <label class="block mb-2">
+      <input type="radio" name="q1" value="mono"> Mono-cropping
+    </label><br>
+
+    <button type="submit" class="quiz-btn">Submit Answer ✅</button>
+  </form>
+</div>
+{% endblock %}

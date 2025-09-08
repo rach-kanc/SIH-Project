@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KhetSetu 🌱</title>
+  <!-- Tailwind CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-green-50 text-gray-800 flex flex-col min-h-screen">
+
+  <!-- Navbar -->
+  <nav class="bg-green-600 p-4 shadow-lg flex justify-between items-center">
+    <h1 class="text-white text-2xl font-bold">KhetSetu 🌱</h1>
+    <ul class="flex gap-6 text-white">
+      <li><a href="{{ url_for('dashboard') }}" class="hover:underline">Dashboard</a></li>
+      <li><a href="{{ url_for('quiz') }}" class="hover:underline">Quiz</a></li>
+      <li><a href="{{ url_for('leaderboard') }}" class="hover:underline">Leaderboard</a></li>
+      <li><a href="{{ url_for('show_badges') }}" class="hover:underline">Badges</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="flex-grow container mx-auto p-6">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-green-700 text-white text-center py-3">
+    🌾 KhetSetu Hackathon Project — Connecting Farmers, Knowledge & Sustainability
+  </footer>
+
+  <!-- Custom JS -->
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
