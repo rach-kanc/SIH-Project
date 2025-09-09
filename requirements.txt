@@ -1,0 +1,13 @@
+torch>=2.0
+torchvision
+tqdm
+numpy
+pandas
+scikit-learn
+opencv-python
+matplotlib
+albumentations
+streamlit
+Pillow
+tensorboard
+pytest

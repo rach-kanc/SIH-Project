@@ -1,33 +1,70 @@
-Problem Statement ID:   25075
-Problem Statement Title:    "Gamified Platform to Promote Sustainable Farming Practices"
+# Plant Disease Identifier
 
-PROBLEM
 
-Despite numerous awareness campaigns, many farmers still rely on unsustainable practices—excessive chemical use, over-irrigation, or mono-cropping—due to habit, lack of training, or limited engagement. Traditional training methods often fail to inspire lasting behavioural change, especially among younger farmers.
 
-CHALLENGE
+**Goal:** Create an Image classifier model that can identify plant diseases based on an image of a leaf provided by the user (but the model works only for bell pepper, potato and tomato plants)
 
-Design a gamified digital platform that educates and motivates farmers to adopt sustainable agricultural practices through interactive challenges, rewards, and community participation.
 
-CORE FEATUES
 
-- Learning Through Play: Convert best practices—such as organic input use, mixed cropping, soil health management—into engaging missions or tasks.
-- Personalized Quests: Tailor challenges based on the farmer’s crop, location, and farm size—e.g., “Complete 3 weeks of mulching on banana fields” or “Switch to bio-pesticides this season.”
-- Progress Tracker: Visual dashboards showing farmer progress, sustainability score, and learning badges.
-- Peer Sharing & Leaderboards: Allow farmers to share progress and earn recognition locally or panchayat-wise.
-- Incentive System: Link rewards to real-world benefits like scheme eligibility points, training credits, or public recognition.
+**Dataset:** PlantVillage Dataset (link: https://www.kaggle.com/datasets/emmarex/plantdisease)
 
-EXPECTED IMPACT
 
-- Encourages adoption of eco-friendly practices in a fun, engaging way.
-- Builds a digitally connected community of progressive farmers.
-- Makes sustainable farming accessible, especially for youth and early adopters.
 
-Organization:	Government of Kerala
-Department:	Department of Agriculture
-Category:	Software
-Theme:	Agriculture, FoodTech & Rural Development
+## Repo structure
 
-This platform transforms agricultural extension from top-down instruction to a bottom-up, gamified experience—making sustainable farming a goal, a game, and a movement.
-This solution scores moderately on innovation (3/5) since gamification has been used in multiple sectors, but its application in farming sustainability is relatively new. Feasibility (5/5) is very high because gamified apps are straightforward to build using existing frameworks, and farmers can access them via mobile devices. The impact (5/5) is significant, as it directly influences farmer behavior, encouraging eco-friendly practices and long-term agricultural health. Technical depth (4/5) is solid, involving backend data tracking, behavioral analytics, and interactive app design. Sustainability (4/5) is good, as the platform can be regularly updated with new challenges and reward systems to keep farmers engaged. Scalability (4/5) is also strong, as the model can be applied across different regions, crops, and even international contexts, though cultural and linguistic tailoring will be necessary.
+- notebooks/: Preprocessing the data and training the model
+
+- src/: reusable modules (data.py, train.py, model.py, predict.py)
+
+- app/: Streamlit demo
+
+- experiments/: final model and artifacts
+
+
+
+## Model
+
+-The trained model's state dictionary is saved as experiments/PlantDiseaseIdentifier.pth . 
+
+-The model was trained using data augmentation and transfer learning.
+
+-The base model is EfficientNet-B1 trained on the ImageNet dataset before training it on our dataset.
+
+
+
+## How to run locally
+
+1. Create venv and install requirements
+
+2. `jupyter notebook`
+
+3. `streamlit run streamlit_app.py`
+
+
+
+## Notes
+- Because the dataset is big it won't be added to the repo, it's gonna be up to you to download it from the link provided and you need to create the folders **data** and **PlantVillage** (image_classifier_explainability/data/PlantVillage) and store the dataset inside the PlantVillage directory.
+
+- Only the model's state dictionary is saved after running the notebook.
+
+- To reproduce the model: run `notebooks/PlantDiseaseIdentifier.ipynb` end-to-end (it produces experiments/PlantDiseaseIdentifier.pth).
+
+
+
+## Live Demo
+
+- URL: https://plantdiseaseidentifier-7gtdeyaxg8uwbj4qgvtf6f.streamlit.app/
+
+
+## License
+
+- Unknown
+
+
+
+## Author
+
+- Khalil Fawaz — link to LinkedIn: www.linkedin.com/in/khalil-fawaz-aa7709314
+
+
 

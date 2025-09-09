@@ -1,0 +1,56 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+
+# Dataset and cache
+data/
+*.h5
+*.npz
+*.csv
+*.tsv
+*.json
+*.pickle
+*.pkl
+*.joblib
+*.zip
+*.tar
+*.gz
+
+# Streamlit cache
+.streamlit/
+**/.streamlit/
+
+# Logs
+logs/
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
+
+# VSCode / IDE settings
+.vscode/
+.idea/
+.vs/
+
+# Docker
+*.tar
+*.img
+*.bak
+docker-compose.override.yml
+
+# Python packaging
+*.egg-info/
+dist/
+build/
