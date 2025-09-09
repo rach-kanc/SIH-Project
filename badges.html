@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Farming Badges</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(120deg, #4caf50, #2e7d32);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    header {
+      background-color: rgba(0,0,0,0.2);
+      width: 100%;
+      padding: 20px;
+      text-align: center;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .badges-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 30px;
+      padding: 30px;
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    .badge {
+      background-color: rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+      transition: transform 0.3s ease;
+    }
+
+    .badge:hover {
+      transform: scale(1.05);
+    }
+
+    .badge img {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 10px;
+      opacity: 1;
+      transition: opacity 0.3s;
+    }
+
+    .badge.locked img {
+      filter: grayscale(100%);
+      opacity: 0.5;
+    }
+
+    .badge-title {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .badge-desc {
+      font-size: 14px;
+      color: #e0e0e0;
+    }
+
+    .back-link {
+      margin: 20px;
+      color: #fff;
+      text-decoration: underline;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <header>🏅 Farmer Badges</header>
+
+  <div class="badges-container" id="badges-container">
+    <!-- Badges will be inserted here -->
+  </div>
+
+  <a class="back-link" href="index.html">← Back to Dashboard</a>
+
+  <script>
+    // Simulated badge unlock state
+    const userBadges = {
+      level1Complete: true,
+      level2Complete: true,
+      level3Complete: false,
+      uploaded5Photos: true,
+      emergencyModeUsed: false
+    };
+
+    // Badge definitions
+    const badges = [
+      {
+        id: "level1Complete",
+        title: "Soil Master",
+        desc: "Completed Level 1",
+        icon: "https://img.icons8.com/color/96/plant-under-sun.png"
+      },
+      {
+        id: "level2Complete",
+        title: "Water Warrior",
+        desc: "Completed Level 2",
+        icon: "https://img.icons8.com/color/96/sprinkler.png"
+      },
+      {
+        id: "level3Complete",
+        title: "Rotation Expert",
+        desc: "Completed Level 3",
+        icon: "https://img.icons8.com/color/96/greenhouse.png"
+      },
+      {
+        id: "uploaded5Photos",
+        title: "Proof Provider",
+        desc: "Uploaded 5 photos",
+        icon: "https://img.icons8.com/color/96/image.png"
+      },
+      {
+        id: "emergencyModeUsed",
+        title: "Crisis Manager",
+        desc: "Used emergency levels",
+        icon: "https://img.icons8.com/color/96/emergency.png"
+      }
+    ];
+
+    const container = document.getElementById('badges-container');
+
+    badges.forEach(badge => {
+      const isUnlocked = userBadges[badge.id];
+
+      const badgeEl = document.createElement('div');
+      badgeEl.className = 'badge' + (isUnlocked ? '' : ' locked');
+
+      const img = document.createElement('img');
+      img.src = badge.icon;
+      img.alt = badge.title;
+
+      const title = document.createElement('div');
+      title.className = 'badge-title';
+      title.textContent = badge.title;
+
+      const desc = document.createElement('div');
+      desc.className = 'badge-desc';
+      desc.textContent = badge.desc;
+
+      badgeEl.appendChild(img);
+      badgeEl.appendChild(title);
+      badgeEl.appendChild(desc);
+
+      container.appendChild(badgeEl);
+    });
+  </script>
+</body>
+</html>
