@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>KhetSetu Weather — Gamified Farmland</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;color:#143;}
+    body{
+      background:linear-gradient(180deg,#aee1a0 0%, #76c893 45%, #3aa76b 100%);
+      display:flex;align-items:center;justify-content:center;padding:24px;
+    }
+    .card{
+      width:980px;max-width:98%;background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.85));
+      border-radius:20px;box-shadow:0 12px 30px rgba(6,40,15,0.25);overflow:hidden;display:grid;grid-template-columns:420px 1fr;
+    }
+    .left{padding:22px;position:relative;background-image:radial-gradient(circle at 10% 10%, rgba(255,255,255,0.25), transparent 20%);display:flex;flex-direction:column;gap:14px;border-right:1px solid rgba(6,40,15,0.06);}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:62px;height:62px;border-radius:12px;background:linear-gradient(135deg,#ffe8a1,#ffd08a);display:flex;align-items:center;justify-content:center;font-weight:700;color:#2b5;box-shadow:0 4px 10px rgba(0,0,0,0.08)}
+    .brand h1{font-size:18px;color:#264b2b}
+    .brand p{font-size:12px;color:#35684a;margin-top:4px}
+    .controls{display:flex;gap:8px}
+    .controls input{flex:1;padding:12px 14px;border-radius:12px;border:2px solid rgba(6,40,15,0.06);background:rgba(255,255,255,0.9);font-size:15px}
+    .controls button{padding:12px 14px;border-radius:12px;border:none;background:#2f8f46;color:white;font-weight:600;cursor:pointer}
+    .farm-scene{height:240px;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#b5ecff 0%, #9bd9ff 50%);box-shadow:0 6px 20px rgba(4,35,12,0.06);position:relative}
+    .farm-ground{position:absolute;left:0;right:0;bottom:0;height:110px;background:linear-gradient(180deg,#5aa35d,#3f8a43);display:flex;align-items:flex-end;justify-content:space-between;padding:12px}
+    .sky-obj{position:absolute;top:12px;left:14px;opacity:0.95}
+    .cloud{animation:cloudMove 35s linear infinite}
+    @keyframes cloudMove{0%{transform:translateX(-10px)}50%{transform:translateX(6px)}100%{transform:translateX(-10px)}}
+    .right{padding:22px;display:flex;flex-direction:column;gap:12px}
+    .widget{flex:1;padding:14px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.8),rgba(255,255,255,0.7));box-shadow:inset 0 -6px 12px rgba(0,0,0,0.03)}
+    .big-temp{font-size:46px;font-weight:800;color:#1f5b2f}
+    .muted{font-size:13px;color:#35684a;opacity:0.9}
+    .row{display:flex;gap:12px;align-items:center}
+    .xpbar{height:16px;background:rgba(6,40,15,0.07);border-radius:10px;overflow:hidden}
+    .xp{height:100%;width:8%;background:linear-gradient(90deg,#fff6a8,#ffd66b);transition:width 700ms ease}
+    .coins{display:flex;gap:8px;align-items:center}
+    .rain-alert{background:linear-gradient(90deg,#dff7ff,#c7f1ff);padding:10px;border-radius:10px;border:1px solid rgba(4,80,120,0.06);display:none;margin-top:8px}
+    .forecast{display:flex;gap:10px;margin-top:12px}
+    .forecast-card{flex:1;padding:12px;border-radius:12px;background:linear-gradient(180deg,#ffffff,#f6fff8);box-shadow:0 4px 10px rgba(0,0,0,0.05);text-align:center}
+    .forecast-card h4{font-size:14px;color:#234b32;margin-bottom:6px}
+    .forecast-card img{width:42px;height:42px}
+    footer{font-size:12px;color:#234b32;opacity:0.85}
+  </style>
+</head>
+<body>
+  <div class="card" role="application">
+    <div class="left">
+      <div class="brand">
+        <div class="logo">F🌾</div>
+        <div>
+          <h1>KhetSetu Weather</h1>
+          <p>Gamified weather for healthy farmland — plant, protect, prosper.</p>
+        </div>
+      </div>
+      <div class="controls">
+        <input id="locationInput" placeholder="Enter city / pincode / lat,long" aria-label="location input" />
+        <button id="fetchBtn">Check</button>
+      </div>
+      <div class="farm-scene">
+        <svg class="sky-obj cloud" width="160" height="90" viewBox="0 0 160 90"><ellipse cx="40" cy="30" rx="28" ry="16" fill="white" /><ellipse cx="70" cy="30" rx="34" ry="18" fill="white" /><ellipse cx="100" cy="30" rx="24" ry="14" fill="white" /></svg>
+        <svg style="position:absolute;right:18px;top:12px" width="84" height="84" viewBox="0 0 64 64"><circle cx="32" cy="32" r="14" fill="#ffd66b"/></svg>
+        <div class="farm-ground">
+          <div style="display:flex;gap:8px;align-items:flex-end">
+            <div style="width:86px;height:64px;border-radius:8px;background:linear-gradient(180deg,#5be37b,#2b8b3f);display:flex;align-items:center;justify-content:center;color:#052">Field A</div>
+            <div style="width:86px;height:64px;border-radius:8px;background:linear-gradient(180deg,#9be5b7,#3f9750);display:flex;align-items:center;justify-content:center;color:#052">Field B</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center"><div>🌱</div><div>🌾</div><div>🍅</div></div>
+        </div>
+      </div>
+      <div class="rain-alert" id="alertBox"></div>
+    </div>
+    <div class="right">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="row">
+          <div style="margin-right:8px">
+            <div class="big-temp" id="tempDisplay">—°C</div>
+            <div class="muted" id="condDisplay">—</div>
+          </div>
+          <div class="widget" style="min-width:160px">
+            <div class="muted">Humidity</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+              <strong id="humVal">—%</strong>
+            </div>
+          </div>
+        </div>
+        <div style="width:38%;">
+          <div class="muted">Precipitation (mm)</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+            <strong id="precVal">—</strong>
+            <div style="text-align:right">
+              <div class="muted">Rain chance</div>
+              <div id="rainChance">—%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="forecast" id="forecastBox">
+        <!-- forecast cards will go here -->
+      </div>
+      <footer style="margin-top:auto">Tip: Use this alongside your backend. Save player XP in DB for persistence.</footer>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = '/get_weather';
+    const tempDisplay = document.getElementById('tempDisplay');
+    const condDisplay = document.getElementById('condDisplay');
+    const humVal = document.getElementById('humVal');
+    const precVal = document.getElementById('precVal');
+    const rainChance = document.getElementById('rainChance');
+    const alertBox = document.getElementById('alertBox');
+    const forecastBox = document.getElementById('forecastBox');
+
+    document.getElementById('fetchBtn').addEventListener('click', () => {
+      const q = document.getElementById('locationInput').value;
+      fetchWeather(q);
+    });
+
+    async function fetchWeather(q){
+      try {
+        const res = await fetch(API_URL + '?q=' + encodeURIComponent(q));
+        const data = await res.json();
+        const current = data.current;
+        const forecast = data.forecast.forecastday;
+
+        tempDisplay.textContent = current.temp_c + '°C';
+        condDisplay.textContent = current.condition.text;
+        humVal.textContent = current.humidity + '%';
+        precVal.textContent = current.precip_mm;
+        rainChance.textContent = forecast[0].day.daily_chance_of_rain + '%';
+
+        // Alerts
+        alertBox.style.display = "none";
+        if(current.temp_c > 35){
+          alertBox.textContent = "🔥 Excessive heat alert! Protect your crops from heat stress.";
+          alertBox.style.display = "block";
+        } else if(forecast[0].day.daily_chance_of_rain > 60){
+          alertBox.textContent = "🌧️ High chance of rain! Take precautions.";
+          alertBox.style.display = "block";
+        }
+
+        // Next 2 days forecast
+        forecastBox.innerHTML = "";
+        for(let i=1; i<=2; i++){
+          const f = forecast[i];
+          const card = document.createElement('div');
+          card.className = "forecast-card";
+          card.innerHTML = `
+            <h4>${f.date}</h4>
+            <img src="https:${f.day.condition.icon}" alt="">
+            <div>${f.day.avgtemp_c}°C</div>
+            <div class="muted">${f.day.condition.text}</div>
+            <div class="muted">Rain: ${f.day.daily_chance_of_rain}%</div>
+          `;
+          forecastBox.appendChild(card);
+        }
+
+      } catch (e){
+        console.error(e);
+        alert("Error fetching weather");
+      }
+    }
+  </script>
+</body>
+</html>
