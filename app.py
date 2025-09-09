@@ -1,6 +1,6 @@
 import sqlite3
 import shortuuid
-from flask import Flask, jsonify, request, g
+from flask import Flask, jsonify, request, g, render_template, redirect, url_for, session, flash
 # In a real application, you MUST use a secure hashing library.
 # from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -8,6 +8,12 @@ from flask import Flask, jsonify, request, g
 app = Flask(__name__)
 app.config['DATABASE'] = 'farm_game.db'
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True # Makes API output readable
+app.secret_key = "your_secret_key"  # For session management
+
+# In-memory "database" with a default user (for HTML routes compatibility)
+users = {
+    "farmer": "123"   # Default login account
+}
 
 # --- Database Connection Management ---
 
@@ -26,7 +32,6 @@ def close_db(exception):
         db.close()
 
 # --- Core Database Logic Functions ---
-# (Table creation logic remains the same)
 
 def create_tables(conn):
     """Sets up all required tables using shortuuid for primary keys."""
@@ -72,7 +77,7 @@ def create_tables(conn):
     ''')
     conn.commit()
 
-# --- NEW & UPDATED DATABASE FUNCTIONS ---
+# --- DATABASE FUNCTIONS ---
 
 def get_user_by_phone(conn, phone):
     """Finds a user by their phone number for login."""
@@ -124,16 +129,82 @@ def init_db_command():
     create_tables(db)
     print("Database has been initialized.")
 
-# --- API Routes ---
+# --- HTML TEMPLATE ROUTES (from second file) ---
 
+# Splash screen route
+@app.route('/splash')
+def splash():
+    return render_template('splash.html')
+
+# Root → Redirects to splash
 @app.route('/')
 def index():
+    return redirect(url_for('splash'))
+
+# Signup route
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        if username in users:
+            flash("User already exists! Try logging in.", "error")
+            return redirect(url_for('signup'))
+        
+        users[username] = password
+        flash("Account created successfully! Please log in.", "success")
+        return redirect(url_for('login'))
+
+    return render_template('signup.html')
+
+# Login route
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        if username in users and users[username] == password:
+            session['username'] = username
+            flash("Login successful!", "success")
+            return redirect(url_for('welcome'))
+        else:
+            flash("Invalid credentials! Please try again.", "error")
+            return redirect(url_for('login'))
+
+    return render_template('login.html')
+
+# Welcome route
+@app.route('/welcome')
+def welcome():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    return render_template('welcome.html', username=session['username'])
+
+# Dashboard route
+@app.route('/dashboard')
+def dashboard():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    return render_template('dashboard.html', username=session['username'])
+
+# Logout route
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    flash("You have been logged out.", "success")
+    return redirect(url_for('login'))
+
+# --- API ROUTES (from first file) ---
+
+@app.route('/api')
+def api_index():
     return "<h1>Sustainable Farming API is running!</h1>"
 
-# --- User & Auth Routes ---
+# --- User & Auth API Routes ---
 @app.route('/api/register', methods=['POST'])
 def register_user():
-    # This route remains the same as before
     data = request.get_json()
     if not all(k in data for k in ['phone', 'password', 'name', 'village', 'district', 'state']):
         return jsonify({"error": "Missing required fields"}), 400
@@ -152,7 +223,7 @@ def register_user():
         return jsonify({"error": "User with this phone number already exists"}), 409
 
 @app.route('/api/login', methods=['POST'])
-def login():
+def api_login():
     """API endpoint for user login."""
     data = request.get_json()
     if not data or 'phone' not in data or 'password' not in data:
@@ -179,7 +250,7 @@ def get_profile(user_id):
         return jsonify(dict(profile))
     return jsonify({"error": "User not found"}), 404
 
-# --- Task & Gameplay Routes ---
+# --- Task & Gameplay API Routes ---
 
 @app.route('/api/tasks', methods=['GET'])
 def get_all_tasks():
@@ -217,10 +288,9 @@ def verify_task():
         return jsonify({"message": "Task verified successfully!", "awarded": result}), 200
     return jsonify({"error": "Verification failed. Task may not be 'COMPLETED' or ID is invalid."}), 400
 
-# --- Community Routes ---
-# (Dashboard and Leaderboard routes remain the same)
+# --- Community API Routes ---
 @app.route('/api/dashboard/<user_id>', methods=['GET'])
-def get_dashboard(user_id):
+def get_api_dashboard(user_id):
     db = get_db()
     cursor = db.cursor()
     tasks = cursor.execute('''
@@ -239,4 +309,3 @@ def get_leaderboard(district, village):
 
 if __name__ == '__main__':
     app.run(debug=True)
-
