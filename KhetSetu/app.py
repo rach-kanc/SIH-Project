@@ -1,40 +1,59 @@
-from flask import Flask, render_template, redirect, request, url_for
+from flask import Flask, render_template, request, redirect, url_for
 
 app = Flask(__name__)
 
+# ----------------------
+# Simple In-Memory Data
+# ----------------------
 user_xp = 0
-
-leaderboard_data = [
-    {"name": "Alice", "xp": 250},
-    {"name": "Bob", "xp": 200},
-    {"name": "Charlie", "xp": 150},
+leaderboard = [
+    {"name": "Alice", "xp": 300},
+    {"name": "Bob", "xp": 250},
+    {"name": "Charlie", "xp": 200},
 ]
 
-quiz_questions = [
-    {"question": "Which fertilizer is organic?", "options": ["Chemical", "Compost", "Pesticide"], "answer": "Compost"},
-    {"question": "Which crop uses less water?", "options": ["Rice", "Millet", "Wheat"], "answer": "Millet"}
-]
+# ----------------------
+# Routes
+# ----------------------
 
 @app.route("/")
 def dashboard():
     global user_xp
-    tree_height = 100 + user_xp
+    tree_height = user_xp + 100  # XP affects tree growth
     return render_template("dashboard.html", xp=user_xp, tree_height=tree_height)
 
-@app.route("/leaderboard")
-def leaderboard():
-    return render_template("leaderboard.html", leaderboard=leaderboard_data)
 
 @app.route("/quiz", methods=["GET", "POST"])
 def quiz():
     global user_xp
     if request.method == "POST":
-        for i, q in enumerate(quiz_questions):
-            selected = request.form.get(f"q{i}")
-            if selected == q["answer"]:
-                user_xp += 50
+        # very simple: each submission gives XP
+        user_xp += 50
         return redirect(url_for("dashboard"))
-    return render_template("quiz.html", questions=quiz_questions)
+    return render_template("quiz.html")
 
+
+@app.route("/leaderboard")
+def leaderboard_page():
+    sorted_board = sorted(leaderboard, key=lambda x: x["xp"], reverse=True)
+    return render_template("leaderboard.html", leaderboard=sorted_board)
+
+
+@app.route("/badges")
+def show_badges():
+    global user_xp
+    # Badge unlock logic
+    unlocked = []
+    if user_xp >= 100:
+        unlocked.append("badge1.png")
+    if user_xp >= 200:
+        unlocked.append("badge2.png")
+    if user_xp >= 300:
+        unlocked.append("badge3.png")
+    return render_template("badges.html", unlocked=unlocked)
+
+# ----------------------
+# Main Entry
+# ----------------------
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,37 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>KhetSetu 🌱</title>
-  <!-- Tailwind CSS CDN -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KhetSetu - Sustainable Farming</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script defer src="{{ url_for('static', filename='js/script.js') }}"></script>
 </head>
-<body class="bg-green-50 text-gray-800 flex flex-col min-h-screen">
+<body class="bg-green-50 font-sans">
+    <!-- Navbar -->
+    <nav class="bg-green-600 p-4 text-white shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold">🌱 KhetSetu</h1>
+            <ul class="flex space-x-6">
+                <li><a href="{{ url_for('dashboard') }}" class="hover:underline">Dashboard</a></li>
+                <li><a href="{{ url_for('quiz') }}" class="hover:underline">Quiz</a></li>
+                <li><a href="{{ url_for('leaderboard_page') }}" class="hover:underline">Leaderboard</a></li>
+                <li><a href="{{ url_for('show_badges') }}" class="hover:underline">Badges</a></li>
+            </ul>
+        </div>
+    </nav>
 
-  <!-- Navbar -->
-  <nav class="bg-green-600 p-4 shadow-lg flex justify-between items-center">
-    <h1 class="text-white text-2xl font-bold">KhetSetu 🌱</h1>
-    <ul class="flex gap-6 text-white">
-      <li><a href="{{ url_for('dashboard') }}" class="hover:underline">Dashboard</a></li>
-      <li><a href="{{ url_for('quiz') }}" class="hover:underline">Quiz</a></li>
-      <li><a href="{{ url_for('leaderboard') }}" class="hover:underline">Leaderboard</a></li>
-      <li><a href="{{ url_for('show_badges') }}" class="hover:underline">Badges</a></li>
-    </ul>
-  </nav>
-
-  <!-- Main Content -->
-  <main class="flex-grow container mx-auto p-6">
-    {% block content %}{% endblock %}
-  </main>
-
-  <!-- Footer -->
-  <footer class="bg-green-700 text-white text-center py-3">
-    🌾 KhetSetu Hackathon Project — Connecting Farmers, Knowledge & Sustainability
-  </footer>
-
-  <!-- Custom JS -->
-  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <!-- Page Content -->
+    <main class="container mx-auto p-6">
+        {% block content %}{% endblock %}
+    </main>
 </body>
 </html>

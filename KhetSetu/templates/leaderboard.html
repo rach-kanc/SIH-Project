@@ -1,25 +1,25 @@
 {% extends "base.html" %}
-{% block content %}
-<div class="bg-white p-8 rounded-2xl shadow-lg max-w-2xl mx-auto">
-  <h2 class="text-2xl font-bold mb-6">Leaderboard 🏆</h2>
 
-  <table class="w-full border-collapse">
-    <thead>
-      <tr class="bg-green-200">
-        <th class="p-2">Rank</th>
-        <th class="p-2">Name</th>
-        <th class="p-2">XP</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for player in leaderboard %}
-      <tr class="leaderboard-row">
-        <td class="p-2">{{ player.rank }}</td>
-        <td class="p-2">{{ player.name }}</td>
-        <td class="p-2">{{ player.xp }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+{% block content %}
+<div class="text-center">
+    <h1 class="text-2xl font-bold mb-6 text-green-700">🏆 Leaderboard</h1>
+    <table class="mx-auto border-collapse w-2/3">
+        <thead>
+            <tr class="bg-green-200">
+                <th class="border p-2">Rank</th>
+                <th class="border p-2">Name</th>
+                <th class="border p-2">XP</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for idx, player in enumerate(leaderboard, start=1) %}
+            <tr class="hover:bg-green-100">
+                <td class="border p-2">{{ idx }}</td>
+                <td class="border p-2">{{ player.name }}</td>
+                <td class="border p-2">{{ player.xp }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}

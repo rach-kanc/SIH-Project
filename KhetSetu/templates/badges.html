@@ -1,20 +1,31 @@
 {% extends "base.html" %}
+
 {% block content %}
-<div class="bg-white p-8 rounded-2xl shadow-lg max-w-3xl mx-auto text-center">
-  <h2 class="text-2xl font-bold mb-6">Your Badges 🎖️</h2>
+<div class="text-center">
+    <h1 class="text-2xl font-bold mb-6 text-green-700">🎖️ Your Badges</h1>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center">
 
-  {% if user_badges %}
-    <div class="flex justify-center gap-8 flex-wrap">
-      {% for badge_name, badge_img in user_badges.items() %}
-        <div class="flex flex-col items-center">
-          <img src="{{ url_for('static', filename='images/' + badge_img) }}" class="badge w-24 mb-2" alt="{{ badge_name }}">
-          <span class="font-medium">{{ badge_name }}</span>
+        {% if "badge1.png" in unlocked %}
+        <div class="bg-white shadow-lg rounded-2xl p-6 hover:scale-105 transform transition">
+            <img src="{{ url_for('static', filename='images/badge1.png') }}" alt="Badge 1" class="w-32 h-32 mx-auto">
+            <p class="mt-4 font-semibold">Beginner Farmer 🌱</p>
         </div>
-      {% endfor %}
-    </div>
-  {% else %}
-    <p class="text-gray-500">You haven’t unlocked any badges yet. Complete activities or quizzes to earn badges!</p>
-  {% endif %}
+        {% endif %}
 
+        {% if "badge2.png" in unlocked %}
+        <div class="bg-white shadow-lg rounded-2xl p-6 hover:scale-105 transform transition">
+            <img src="{{ url_for('static', filename='images/badge2.png') }}" alt="Badge 2" class="w-32 h-32 mx-auto">
+            <p class="mt-4 font-semibold">Eco Innovator 🌍</p>
+        </div>
+        {% endif %}
+
+        {% if "badge3.png" in unlocked %}
+        <div class="bg-white shadow-lg rounded-2xl p-6 hover:scale-105 transform transition">
+            <img src="{{ url_for('static', filename='images/badge3.png') }}" alt="Badge 3" class="w-32 h-32 mx-auto">
+            <p class="mt-4 font-semibold">Master Cultivator 🌾</p>
+        </div>
+        {% endif %}
+
+    </div>
 </div>
 {% endblock %}
